@@ -1,0 +1,15 @@
+{
+  "encoding": {
+    "free": 0,
+    "obstacle": 1
+  },
+  "resolution_m_per_cell": 0.1,
+  "rows": 40,
+  "cols": 40,
+  "x_min": -2.0,
+  "x_max": 2.0,
+  "y_min": -2.0,
+  "y_max": 2.0,
+  "station_layout": "4 boundary + 4 interior",
+  "distractors": "B1-B5 have non-target images on all four vertical faces."
+}

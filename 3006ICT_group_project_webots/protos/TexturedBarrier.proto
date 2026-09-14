@@ -1,0 +1,54 @@
+#VRML_SIM R2025a utf8
+
+PROTO TexturedBarrier [
+  field SFVec3f translation 0 0 0
+  field SFRotation rotation 0 0 1 0
+  field SFString name "station"
+  field MFString textureUrl ["../textures/target_soda_can.png"]
+]
+{
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    locked TRUE
+    children [
+      Pose {
+        translation 0 0 0.140
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.29 0.30 0.32
+              roughness 0.9
+              metalness 0
+            }
+            geometry Box { size 0.50 0.06 0.28 }
+          }
+        ]
+      }
+      Pose {
+        translation 0 -0.035 0.145
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 1 1 1
+              roughness 0.85
+              metalness 0
+              baseColorMap ImageTexture {
+                url IS textureUrl
+                repeatS FALSE
+                repeatT FALSE
+                filtering 4
+              }
+            }
+            geometry Box { size 0.22 0.008 0.22 }
+          }
+        ]
+      }
+    ]
+    boundingObject Pose {
+      translation 0 0 0.140
+      children [ Box { size 0.50 0.06 0.28 } ]
+    }
+  }
+}

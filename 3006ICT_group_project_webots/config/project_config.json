@@ -1,0 +1,133 @@
+{
+  "arena": {
+    "x_min": -2.0,
+    "x_max": 2.0,
+    "y_min": -2.0,
+    "y_max": 2.0,
+    "resolution": 0.1
+  },
+  "map_file": "maps/occupancy_grid.npy",
+  "robot": {
+    "model": "Cyberbotics R2025a E-puck",
+    "pose_source": "GPS + InertialUnit",
+    "devices": [
+      "left wheel motor",
+      "right wheel motor",
+      "camera",
+      "ps0-ps7",
+      "gps",
+      "imu"
+    ]
+  },
+  "starts": [
+    {
+      "id": "A",
+      "pose": [
+        -1.45,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "id": "B",
+      "pose": [
+        0.0,
+        -1.45,
+        1.5707963267948966
+      ]
+    },
+    {
+      "id": "C",
+      "pose": [
+        1.45,
+        0.9,
+        3.141592653589793
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "id": "S1",
+      "placement": "boundary",
+      "observe": [
+        -1.42,
+        1.25
+      ],
+      "observe_yaw": 3.141592653589793
+    },
+    {
+      "id": "S2",
+      "placement": "interior",
+      "observe": [
+        -0.65,
+        0.57
+      ],
+      "observe_yaw": 1.5707963267948966
+    },
+    {
+      "id": "S3",
+      "placement": "boundary",
+      "observe": [
+        1.15,
+        1.42
+      ],
+      "observe_yaw": 1.5707963267948966
+    },
+    {
+      "id": "S4",
+      "placement": "interior",
+      "observe": [
+        0.37,
+        0.45
+      ],
+      "observe_yaw": 0.0
+    },
+    {
+      "id": "S5",
+      "placement": "boundary",
+      "observe": [
+        1.42,
+        -0.55
+      ],
+      "observe_yaw": 0.0
+    },
+    {
+      "id": "S6",
+      "placement": "interior",
+      "observe": [
+        0.55,
+        -0.82
+      ],
+      "observe_yaw": -1.5707963267948966
+    },
+    {
+      "id": "S7",
+      "placement": "boundary",
+      "observe": [
+        -0.95,
+        -1.42
+      ],
+      "observe_yaw": -1.5707963267948966
+    },
+    {
+      "id": "S8",
+      "placement": "interior",
+      "observe": [
+        -0.87,
+        -0.45
+      ],
+      "observe_yaw": 3.141592653589793
+    }
+  ],
+  "target_labels": [
+    "soda_can",
+    "coffee_mug",
+    "backpack",
+    "fire_extinguisher",
+    "camera",
+    "running_shoe",
+    "headphones",
+    "wall_clock"
+  ],
+  "important": "Target-to-station assignment may change in assessment worlds."
+}
