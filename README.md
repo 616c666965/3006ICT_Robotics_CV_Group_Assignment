@@ -1,15 +1,23 @@
-3006ICT Robotics and Computer Vision
+# 3006ICT Robotics and Computer Vision
+
 Group Project - Final Student Materials
-=======================================
 
-TRAINING WORLDS
----------------
-worlds/training_start_A.wbt
-worlds/training_start_B.wbt
-worlds/training_start_C.wbt
+**Team**
 
-ENVIRONMENT
------------
+| Name | Student ID |
+|------|-----------|
+| Alfie McNamee | S5374969 |
+| Ayush Lal | S5409751 |
+| Ragib Towhid | Sxxx |
+
+## Training Worlds
+
+- `worlds/training_start_A.wbt`
+- `worlds/training_start_B.wbt`
+- `worlds/training_start_C.wbt`
+
+## Environment
+
 - 4 m x 4 m e-puck-scale arena
 - 8 observation stations: 4 boundary + 4 interior
 - 5 navigation barriers B1-B5
@@ -17,35 +25,41 @@ ENVIRONMENT
 - 40 x 40 occupancy grid at 0.10 m/cell
 - e-puck camera, ps0-ps7, GPS and InertialUnit
 
-OBSERVATION TARGETS
--------------------
-soda_can
-coffee_mug
-backpack
-fire_extinguisher
-camera
-running_shoe
-headphones
-wall_clock
+## Observation Targets
 
-See targets/target_reference.png.
+- soda_can
+- coffee_mug
+- backpack
+- fire_extinguisher
+- camera
+- running_shoe
+- headphones
+- wall_clock
+
+See `targets/target_reference.png`.
 
 The images on B1-B5 are non-target visual distractors. They are not valid
 mission targets.
 
-MISSION INPUT
--------------
+## Mission Input
+
 The target identity is provided in:
-    config/assessment_mission.json
+
+```
+config/assessment_mission.json
+```
 
 Example:
-    {"target": "camera"}
+
+```json
+{"target": "camera"}
+```
 
 Your controller should read the mission target from this configuration rather
 than requiring the instructor to edit your source code.
 
-ASSESSMENT
-----------
+## Assessment
+
 The target-to-station assignment may change in assessment worlds. Do not
 assume that a target is always at the same station.
 
