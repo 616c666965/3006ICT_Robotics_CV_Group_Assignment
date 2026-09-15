@@ -77,7 +77,9 @@ def proximity_values():
 # Group implementation
 # ------------------------------------------------------------------
 # TO DO
-
+# Thinking of having these as the possible states the robot will be in, tuple for efficiency. 
+STATE = ("TRAVEL_TO_STATION", "ORIENT_TOWARD_STATION", "INSPECTING_STATION", "TRAVEL_TO_TARGET", "DONE")
+current_state = STATE[0] # Starts travelling to the station 
 # ------------------------------------------------------------------
 # Main
 # ------------------------------------------------------------------
