@@ -210,11 +210,6 @@ def main():
         elif current_state == "INSPECTING_STATION":
             
             # capture frame, call identify_target()
-
-            set_speed(-4.0, -4.0)
-            for i in range(200):
-                robot.step(timestep)
-            set_speed(0.0, 0.0)
             frame = camera_bgr()
             result = identify_target(frame)
             cv2.imwrite("debug_frame.png", frame)
