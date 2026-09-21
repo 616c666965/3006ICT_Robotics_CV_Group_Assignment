@@ -168,6 +168,8 @@ def main():
             print(f"ROBOT REACHED STATION {station['id']}")
             station_index += 1
             waypoints = []
+            # So where this time.sleep is I imagine us making the camera facing towards the station 
+            # occurring here, and then also the object recognisntion happens here
             time.sleep(3)
             continue
             
