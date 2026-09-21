@@ -3,8 +3,8 @@ import numpy as np
 from pathlib import Path
 from project_utils import ROOT
 
-orb = cv2.ORB_create(nfeatures=2000, scaleFactor=1.1, nlevels=12)!
-brute_force = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+orb = cv2.ORB_create(nfeatures=2000, scaleFactor=1.1, nlevels=12)
+brute_force = cv2.BFMatcher(cv2.NORM_HAMMING)
 
 TARGET_NAMES = ["soda_can", "coffee_mug", "backpack", "fire_extinguisher",
                 "camera", "running_shoe", "headphones", "wall_clock"]
