@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 from project_utils import ROOT
 
-orb = cv2.ORB_create(nfeatures=2000, scaleFactor=1.1, nlevels=12)
+orb = cv2.ORB_create(nfeatures=2000, scaleFactor=1.1, nlevels=12)!
 brute_force = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
 TARGET_NAMES = ["soda_can", "coffee_mug", "backpack", "fire_extinguisher",
@@ -19,7 +19,6 @@ for name in TARGET_NAMES:
 def identify_target(frame_bgr, minimum_good_matches=15):
     grayscale_version = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
     keypoints, descriptors = orb.detectAndCompute(grayscale_version, None)
-    print(f"Live frame keypoints: {len(keypoints) if keypoints is not None else 0}")
     if descriptors is None:
         return None
 
@@ -32,7 +31,6 @@ def identify_target(frame_bgr, minimum_good_matches=15):
         matches = brute_force.match(descriptors, reference_descriptor)
         good_matches = [i for i in matches if i.distance < 60]
         min_distance = min((m.distance for m in matches), default=None)
-        print(f"  {name}: {len(good_matches)} good matches, {len(matches)} raw matches, min distance {min_distance}") # DEBUG PRINT!
         if len(good_matches) > best_count:
             best_count = len(good_matches)
             best_name = name
