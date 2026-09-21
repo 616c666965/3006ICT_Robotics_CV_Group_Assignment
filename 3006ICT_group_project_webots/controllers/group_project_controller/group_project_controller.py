@@ -9,7 +9,6 @@ Mission:
 import json
 import math
 from pathlib import Path
-import time
 
 import cv2
 import numpy as np
@@ -118,7 +117,7 @@ def move_towards_point(target, pose):
 # TO DO
 # Thinking of having these as the possible states the robot will be in, tuple for efficiency. 
 STATE = ("TRAVEL_TO_STATION", "ORIENT_TOWARD_STATION", "INSPECTING_STATION", "TRAVEL_TO_TARGET", "DONE")
-current_state = STATE[0] # Starts travelling to the station 
+
 
 # Path planner setup
 # Have to do one manual timestep to makesure that getpose works
@@ -135,6 +134,7 @@ print("WAYPOINTS: ", waypoints)
 # Main
 # ------------------------------------------------------------------
 def main():
+    current_state = STATE[0] # Starts travelling to the station 
     print("Group-project controller started.")
     print("Mission:", MISSION)
     print("target:", target)
@@ -149,39 +149,58 @@ def main():
     waypoints = []
     
     while robot.step(timestep) != -1:
-    
+        
+        # Need this for everything really
         pose = get_pose()
         
-        if station_index >= len(CONFIG["stations"]):
-            set_speed(0.0, 0.0)
-            # continue saves from breaking
-            continue
+        if current_state == "TRAVEL_TO_STATION":
+            if station_index >= len(CONFIG["stations"]):
+                set_speed(0.0, 0.0)
+                # continue saves from breaking
+                continue
+            station = CONFIG["stations"][station_index]
             
-        station = CONFIG["stations"][station_index]
-            
-        if not waypoints:  # haven't planned a path to this station yet
-            waypoints = planner.find_path((pose[0], pose[1]), station["observe"])
-            waypoint_index = 0
+            if not waypoints:  # haven't planned a path to this station yet
+                waypoints = planner.find_path((pose[0], pose[1]), station["observe"])
+                waypoint_index = 0
 
-        if waypoint_index >= len(waypoints):
-            # finished all waypoints for this station, move to the next one
-            print(f"ROBOT REACHED STATION {station['id']}")
+            if waypoint_index >= len(waypoints):
+                set_speed(0.0, 0.0)
+                # finished all waypoints for this station, move to the next one
+                print(f"ROBOT REACHED STATION {station['id']}")
+                
+                current_state = "ORIENT_TOWARD_STATION"
+                
+                waypoints = []
+                # So where this time.sleep is I imagine us making the camera facing towards the station 
+                # occurring here, and then also the object recognisntion happens here
+                continue
+            
+            current_target = waypoints[waypoint_index]
+            
+            if has_arrived(pose, current_target):
+                print(f"ROBOT REACHED WAYPOINT {waypoint_index} of {len(waypoints)}")
+                waypoint_index += 1
+            
+            else:
+                left, right = move_towards_point(current_target, pose)
+                set_speed(left, right)
+                
+        elif current_state == "ORIENT_TOWARD_STATION":
+            # rotate in place until yaw ≈ station["observe_yaw"]
+            # once aligned, switch to:
+            current_state = "INSPECTING_STATION"
+            pass
+            
+        elif current_state == "INSPECTING_STATION":
             station_index += 1
-            waypoints = []
-            # So where this time.sleep is I imagine us making the camera facing towards the station 
-            # occurring here, and then also the object recognisntion happens here
-            time.sleep(3)
-            continue
+            # capture frame, call identify_target()
+            # if match: current_state = "DONE"
+            # if no match: station_index += 1, waypoints = [], current_state = "TRAVEL_TO_STATION"
+            pass
             
-        current_target = waypoints[waypoint_index]
-            
-        if has_arrived(pose, current_target):
-            print(f"ROBOT REACHED WAYPOINT {waypoint_index} of {len(waypoints)}")
-            waypoint_index += 1
-            
-        else:
-            left, right = move_towards_point(current_target, pose)
-            set_speed(left, right)
+        elif current_state == "DONE":
+            set_speed(0.0, 0.0)
         
 
 if __name__ == "__main__":
