@@ -23,6 +23,8 @@ from project_utils import CONFIG, ROOT, world_to_grid, grid_to_world
 robot = Robot()
 timestep = int(robot.getBasicTimeStep())
 
+
+
 left_motor = robot.getDevice("left wheel motor")
 right_motor = robot.getDevice("right wheel motor")
 camera = robot.getDevice("camera")
@@ -41,7 +43,8 @@ imu.enable(timestep)
 for sensor in ps:
     sensor.enable(timestep)
 
-MAX_SPEED = 10
+K_TURN = 2.0
+MAX_SPEED = 6.28
 GRID = np.load(ROOT / "maps" / "occupancy_grid.npy")
 MISSION = json.loads((ROOT / "config" / "assessment_mission.json").read_text())
 target = MISSION["target"]
@@ -55,6 +58,12 @@ def set_speed(left, right):
     left_motor.setVelocity(float(left))
     right_motor.setVelocity(float(right))
 
+def has_arrived(pose, target, threshold = 0.1):
+    """ Without this function the robot just literally won't stop moving """
+    pose_x, pose_y, _ = pose
+    target_x, target_y = target
+    distance = math.hypot(target_x - pose_x, target_y - pose_y)
+    return distance < threshold
 
 def get_pose():
     """Return provided ground-truth-like pose (x, y, yaw)."""
@@ -72,6 +81,28 @@ def camera_bgr():
 def proximity_values():
     return [sensor.getValue() for sensor in ps]
 
+def move_towards_point(target, pose):
+    """Target must be an x y position on the map and pose is the triple (x, y, yaw)"""
+    target_x, target_y = target
+    pose_x, pose_y, yaw = pose
+    
+    # Get the target angle 
+    target_angle = math.atan2(target_y - pose_y, target_x - pose_x)
+    # How off the yaw actually is
+    heading_error = target_angle - yaw
+    # (heading_error = target_angle - yaw) caused 350 degrees instead of -10 degrees
+    heading_error = math.atan2(math.sin(heading_error), math.cos(heading_error))
+    
+    # Turning speed
+    turn_speed = K_TURN * heading_error
+    forward_speed = MAX_SPEED * math.cos(heading_error)
+    
+    # Converting the forward speed and the turning speed into diferential drive speeds
+    left_wheel_speed = forward_speed - turn_speed
+    right_wheel_speed = forward_speed + turn_speed
+    
+    return (left_wheel_speed, right_wheel_speed)
+    
 
 # ------------------------------------------------------------------
 # Group implementation
@@ -89,13 +120,19 @@ def main():
     print("target:", target)
     print("Stations:", [s["id"] for s in CONFIG["stations"]])
     print("Camera:", camera.getWidth(), "x", camera.getHeight())
-
+    # print(move_towards_point((1.0, 1.0), get_pose())) # <- only works inside the loop
+    
+    # Okay now this loop moves the robot towards the target
+    target_position = (-1.5, -1.5)
     while robot.step(timestep) != -1:
         pose = get_pose()
-        # TO DO
-
-
-        set_speed(0.0, 0.0)
+        if has_arrived(pose, target_position):
+            print("ROBOT HAS ARRIVED!")
+            set_speed(0.0, 0.0)
+        else:
+            left, right = move_towards_point(target_position, pose)
+            print(f"LEFT SPEED {left}, RIGHT SPEED {right}")
+            set_speed(left, right)
 
 
 if __name__ == "__main__":
