@@ -9,6 +9,7 @@ Mission:
 import json
 import math
 from pathlib import Path
+import time
 
 import cv2
 import numpy as np
@@ -16,6 +17,7 @@ from controller import Robot
 
 from path_planner import PathPlanner
 from project_utils import CONFIG, ROOT, world_to_grid, grid_to_world
+from vision import identify_target
 
 
 # ------------------------------------------------------------------
@@ -141,22 +143,44 @@ def main():
     # print(move_towards_point((1.0, 1.0), get_pose())) # <- only works inside the loop
     
     # Okay now this loop moves the robot towards the target
+    
+    station_index = 0
     waypoint_index = 0
+    waypoints = []
+    
     while robot.step(timestep) != -1:
+    
         pose = get_pose()
-        if waypoint_index >= len(waypoints):
+        
+        if station_index >= len(CONFIG["stations"]):
             set_speed(0.0, 0.0)
             # continue saves from breaking
             continue
+            
+        station = CONFIG["stations"][station_index]
+            
+        if not waypoints:  # haven't planned a path to this station yet
+            waypoints = planner.find_path((pose[0], pose[1]), station["observe"])
+            waypoint_index = 0
 
+        if waypoint_index >= len(waypoints):
+            # finished all waypoints for this station, move to the next one
+            print(f"ROBOT REACHED STATION {station['id']}")
+            station_index += 1
+            waypoints = []
+            time.sleep(3)
+            continue
+            
         current_target = waypoints[waypoint_index]
+            
         if has_arrived(pose, current_target):
             print(f"ROBOT REACHED WAYPOINT {waypoint_index} of {len(waypoints)}")
             waypoint_index += 1
+            
         else:
             left, right = move_towards_point(current_target, pose)
             set_speed(left, right)
-
+        
 
 if __name__ == "__main__":
     main()
