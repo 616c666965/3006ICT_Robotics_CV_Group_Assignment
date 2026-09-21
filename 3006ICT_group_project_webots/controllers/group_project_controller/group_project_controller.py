@@ -188,16 +188,46 @@ def main():
                 
         elif current_state == "ORIENT_TOWARD_STATION":
             # rotate in place until yaw ≈ station["observe_yaw"]
-            # once aligned, switch to:
-            current_state = "INSPECTING_STATION"
-            pass
+            observe_yaw = station["observe_yaw"]
+            _, _, yaw = pose
+            rotation_close_enough = 0.05
+            
+            heading_error = observe_yaw - yaw
+            heading_error = math.atan2(math.sin(heading_error), math.cos(heading_error))
+            
+            is_aligned = abs(heading_error) < rotation_close_enough
+            
+            if not is_aligned:
+                turn_speed = K_TURN * heading_error
+                left_wheel_speed = -turn_speed
+                right_wheel_speed = turn_speed
+                set_speed(left_wheel_speed, right_wheel_speed)
+            else:
+                # once aligned, switch to:
+                set_speed(0.0, 0.0)
+                current_state = "INSPECTING_STATION"
             
         elif current_state == "INSPECTING_STATION":
-            station_index += 1
+            
             # capture frame, call identify_target()
-            # if match: current_state = "DONE"
-            # if no match: station_index += 1, waypoints = [], current_state = "TRAVEL_TO_STATION"
-            pass
+
+            set_speed(-4.0, -4.0)
+            for i in range(200):
+                robot.step(timestep)
+            set_speed(0.0, 0.0)
+            frame = camera_bgr()
+            result = identify_target(frame)
+            cv2.imwrite("debug_frame.png", frame)
+            # target = MISSION["target"] # <--- This is already happening outside I caught a bug inclduing this
+            if result == target:
+                # if match: current_state = "DONE"
+                current_state = "DONE"
+            else:
+                # if no match then next station it is
+                print(result, " is not ", target)
+                station_index += 1
+                waypoints = []
+                current_state = "TRAVEL_TO_STATION"
             
         elif current_state == "DONE":
             set_speed(0.0, 0.0)
