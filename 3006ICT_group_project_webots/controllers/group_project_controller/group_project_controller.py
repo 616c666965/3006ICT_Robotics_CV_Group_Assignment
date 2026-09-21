@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 from controller import Robot
 
+from path_planner import PathPlanner
 from project_utils import CONFIG, ROOT, world_to_grid, grid_to_world
 
 
@@ -43,11 +44,16 @@ imu.enable(timestep)
 for sensor in ps:
     sensor.enable(timestep)
 
+# movement control setup
 K_TURN = 2.0
 MAX_SPEED = 6.28
+
+
 GRID = np.load(ROOT / "maps" / "occupancy_grid.npy")
 MISSION = json.loads((ROOT / "config" / "assessment_mission.json").read_text())
 target = MISSION["target"]
+
+
 
 # ------------------------------------------------------------------
 # Provided low-level helpers
@@ -111,6 +117,18 @@ def move_towards_point(target, pose):
 # Thinking of having these as the possible states the robot will be in, tuple for efficiency. 
 STATE = ("TRAVEL_TO_STATION", "ORIENT_TOWARD_STATION", "INSPECTING_STATION", "TRAVEL_TO_TARGET", "DONE")
 current_state = STATE[0] # Starts travelling to the station 
+
+# Path planner setup
+# Have to do one manual timestep to makesure that getpose works
+robot.step(timestep)
+initial_pose = get_pose()
+planner = PathPlanner(GRID)
+start_pos = (initial_pose[0], initial_pose[1])
+goal_pos = (1.5, 1.5) # WHERE WE ARE HEADED
+waypoints = planner.find_path(start_pos, goal_pos)
+
+print("WAYPOINTS: ", waypoints)
+
 # ------------------------------------------------------------------
 # Main
 # ------------------------------------------------------------------
@@ -123,15 +141,20 @@ def main():
     # print(move_towards_point((1.0, 1.0), get_pose())) # <- only works inside the loop
     
     # Okay now this loop moves the robot towards the target
-    target_position = (-1.5, -1.5)
+    waypoint_index = 0
     while robot.step(timestep) != -1:
         pose = get_pose()
-        if has_arrived(pose, target_position):
-            print("ROBOT HAS ARRIVED!")
+        if waypoint_index >= len(waypoints):
             set_speed(0.0, 0.0)
+            # continue saves from breaking
+            continue
+
+        current_target = waypoints[waypoint_index]
+        if has_arrived(pose, current_target):
+            print(f"ROBOT REACHED WAYPOINT {waypoint_index} of {len(waypoints)}")
+            waypoint_index += 1
         else:
-            left, right = move_towards_point(target_position, pose)
-            print(f"LEFT SPEED {left}, RIGHT SPEED {right}")
+            left, right = move_towards_point(current_target, pose)
             set_speed(left, right)
 
 
