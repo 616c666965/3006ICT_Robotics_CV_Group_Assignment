@@ -10,6 +10,39 @@ Group Project - Final Student Materials
 | Ayush Lal | S5409751 |
 | Ragib Ashab | S5404903 |
 
+## Setup and Running
+
+**Requirements**
+
+- Webots R2025a
+- Python 3.10 or later with `numpy` and `opencv-python`
+
+```
+pip install numpy opencv-python
+```
+
+No pretrained models or downloads are needed. The controller uses only the
+files in this folder, with relative paths.
+
+**Steps**
+
+1. Run `python tools/check_python_environment.py` from the
+   `3006ICT_group_project_webots` folder. It prints the Python path and checks
+   that `numpy` and `cv2` import correctly.
+2. In Webots, set **Preferences → General → Python command** to that Python
+   path. Put the path in double quotes if it contains spaces.
+3. Set the mission target in `config/assessment_mission.json`.
+4. Open a world from `3006ICT_group_project_webots/worlds/` and press Play.
+
+**Controller files** (`controllers/group_project_controller/`)
+
+| File | Purpose |
+|------|---------|
+| `group_project_controller.py` | Main state machine: travel, orient, inspect, stop |
+| `path_planner.py` | A* path planning on the occupancy grid |
+| `vision.py` | ORB feature matching against the target reference images |
+| `project_utils.py` | Config loading and grid/world coordinate helpers (provided) |
+
 ## Training Worlds
 
 - `worlds/training_start_A.wbt`
