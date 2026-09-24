@@ -116,13 +116,7 @@ STATE = ("TRAVEL_TO_STATION", "ORIENT_TOWARD_STATION", "INSPECTING_STATION", "TR
 # Path planner setup
 # Have to do one manual timestep to makesure that getpose works
 robot.step(timestep)
-initial_pose = get_pose()
 planner = PathPlanner(GRID)
-start_pos = (initial_pose[0], initial_pose[1])
-goal_pos = (1.5, 1.5) # WHERE WE ARE HEADED
-waypoints = planner.find_path(start_pos, goal_pos)
-
-print("WAYPOINTS: ", waypoints)
 
 # ------------------------------------------------------------------
 # Main
@@ -233,8 +227,6 @@ def main():
             # capture frame, call identify_target()
             frame = camera_bgr()
             result = identify_target(frame)
-            cv2.imwrite(f"debug_frame_{station_index}.png", frame)
-            cv2.imwrite("debug_frame.png", frame)
             # target = MISSION["target"] # <--- This is already happening outside I caught a bug inclduing this[cite: 8]
             # Moves back into the observation waypoint before stopping
             while robot.step(timestep) != -1:
