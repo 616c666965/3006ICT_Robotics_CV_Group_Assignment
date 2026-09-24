@@ -46,6 +46,7 @@ for sensor in ps:
 # movement control setup
 K_TURN = 2.0
 MAX_SPEED = 6.28
+REAR_OBSTACLE_THRESHOLD = 120
 
 GRID = np.load(ROOT / "maps" / "occupancy_grid.npy")
 MISSION = json.loads((ROOT / "config" / "assessment_mission.json").read_text())
@@ -204,12 +205,17 @@ def main():
                 current_state = "INSPECTING_STATION"
             
         elif current_state == "INSPECTING_STATION":
-            # backs up by 35cm to give the camera a better view of the poster
+            # backs up by 35cm to give the camera a better view of the poster,
+            # but stops early if the rear sensors see something behind us
             start_x, start_y = pose[0], pose[1]
             set_speed(-3.0, -3.0)
             while robot.step(timestep) != -1:
                 cur_pose = get_pose()
                 if math.hypot(cur_pose[0] - start_x, cur_pose[1] - start_y) >= 0.35:
+                    break
+                rear_left, rear_right = ps[4].getValue(), ps[3].getValue()
+                if max(rear_left, rear_right) > REAR_OBSTACLE_THRESHOLD:
+                    print(f"Obstacle behind at {station['id']}, stopped reversing early")
                     break
             set_speed(0.0, 0.0)
 
