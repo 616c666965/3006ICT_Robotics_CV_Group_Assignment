@@ -29,6 +29,7 @@ for name in TARGET_NAMES:
     }
 
 def identify_target(frame_bgr, minimum_good_matches=4):
+    frame_bgr = cv2.resize(frame_bgr, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     grayscale_version = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
     keypoints, descriptors = orb.detectAndCompute(grayscale_version, None)
     if descriptors is None or len(descriptors) < minimum_good_matches:
