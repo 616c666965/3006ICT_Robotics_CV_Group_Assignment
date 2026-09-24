@@ -25,8 +25,6 @@ from vision import identify_target
 robot = Robot()
 timestep = int(robot.getBasicTimeStep())
 
-
-
 left_motor = robot.getDevice("left wheel motor")
 right_motor = robot.getDevice("right wheel motor")
 camera = robot.getDevice("camera")
@@ -49,11 +47,9 @@ for sensor in ps:
 K_TURN = 2.0
 MAX_SPEED = 6.28
 
-
 GRID = np.load(ROOT / "maps" / "occupancy_grid.npy")
 MISSION = json.loads((ROOT / "config" / "assessment_mission.json").read_text())
 target = MISSION["target"]
-
 
 
 # ------------------------------------------------------------------
@@ -65,7 +61,7 @@ def set_speed(left, right):
     left_motor.setVelocity(float(left))
     right_motor.setVelocity(float(right))
 
-def has_arrived(pose, target, threshold = 0.1):
+def has_arrived(pose, target, threshold=0.1):
     """ Without this function the robot just literally won't stop moving """
     pose_x, pose_y, _ = pose
     target_x, target_y = target
@@ -78,12 +74,10 @@ def get_pose():
     yaw = imu.getRollPitchYaw()[2]
     return x, y, yaw
 
-
 def camera_bgr():
     h, w = camera.getHeight(), camera.getWidth()
     image = np.frombuffer(camera.getImage(), np.uint8).reshape(h, w, 4)
     return cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
-
 
 def proximity_values():
     return [sensor.getValue() for sensor in ps]
@@ -117,7 +111,6 @@ def move_towards_point(target, pose):
 # TO DO
 # Thinking of having these as the possible states the robot will be in, tuple for efficiency. 
 STATE = ("TRAVEL_TO_STATION", "ORIENT_TOWARD_STATION", "INSPECTING_STATION", "TRAVEL_TO_TARGET", "DONE")
-
 
 # Path planner setup
 # Have to do one manual timestep to makesure that getpose works
@@ -177,11 +170,14 @@ def main():
                 continue
             
             current_target = waypoints[waypoint_index]
+            # Determine if this is the final waypoint to adjust the arrival threshold
+            is_final_waypoint = (waypoint_index == len(waypoints) - 1)
+            arrival_threshold = 0.04 if is_final_waypoint else 0.10
             
-            if has_arrived(pose, current_target):
+            # Pass arrival_threshold so bot stops on waypoint
+            if has_arrived(pose, current_target, threshold=arrival_threshold):
                 print(f"ROBOT REACHED WAYPOINT {waypoint_index} of {len(waypoints)}")
                 waypoint_index += 1
-            
             else:
                 left, right = move_towards_point(current_target, pose)
                 set_speed(left, right)
@@ -208,14 +204,43 @@ def main():
                 current_state = "INSPECTING_STATION"
             
         elif current_state == "INSPECTING_STATION":
-            
+            # backs up by 35cm to give the camera a better view of the poster
+            start_x, start_y = pose[0], pose[1]
+            set_speed(-3.0, -3.0)
+            while robot.step(timestep) != -1:
+                cur_pose = get_pose()
+                if math.hypot(cur_pose[0] - start_x, cur_pose[1] - start_y) >= 0.35:
+                    break
+            set_speed(0.0, 0.0)
+
+            # slight yaw adjustment to face the poster
+            target_yaw = station["observe_yaw"]
+            while robot.step(timestep) != -1:
+                _, _, cur_yaw = get_pose()
+                heading_err = math.atan2(math.sin(target_yaw - cur_yaw), math.cos(target_yaw - cur_yaw))
+                if abs(heading_err) < 0.03:
+                    set_speed(0.0, 0.0)
+                    break
+                turn_speed = K_TURN * heading_err
+                set_speed(-turn_speed, turn_speed)
+
             # capture frame, call identify_target()
             frame = camera_bgr()
             result = identify_target(frame)
+            cv2.imwrite(f"debug_frame_{station_index}.png", frame)
             cv2.imwrite("debug_frame.png", frame)
-            # target = MISSION["target"] # <--- This is already happening outside I caught a bug inclduing this
+            # target = MISSION["target"] # <--- This is already happening outside I caught a bug inclduing this[cite: 8]
+            # Moves back into the observation waypoint before stopping
+            while robot.step(timestep) != -1:
+                cur_pose = get_pose()
+                if has_arrived(cur_pose, station["observe"]):
+                    break
+                left, right = move_towards_point(station["observe"], cur_pose)
+                set_speed(left, right)
+            set_speed(0.0, 0.0)
+
+            # if match: current_state = "DONE"
             if result == target:
-                # if match: current_state = "DONE"
                 current_state = "DONE"
             else:
                 # if no match then next station it is
@@ -223,10 +248,11 @@ def main():
                 station_index += 1
                 waypoints = []
                 current_state = "TRAVEL_TO_STATION"
-            
+        
         elif current_state == "DONE":
             set_speed(0.0, 0.0)
-        
+            break
+
 
 if __name__ == "__main__":
     main()
