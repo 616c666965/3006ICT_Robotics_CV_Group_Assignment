@@ -248,6 +248,7 @@ def main():
                 current_state = "TRAVEL_TO_STATION"
         
         elif current_state == "DONE":
+            print(f"MISSION COMPLETE: Found {target} at station {station['id']}")
             set_speed(0.0, 0.0)
             break
 
